@@ -7,21 +7,22 @@ const {
   addManager,
   getManagers,
   getEmployees,
+  deleteEmployee,
+  deleteManager,
 } = require("../controllers/userController");
 
-router.get("/managers", verifyToken, authorizeRoles("admin"), getManagers);
-router.post("/manager", verifyToken, authorizeRoles("admin"), addManager);
-router.get(
-  "/empolyees",
-  verifyToken,
-  authorizeRoles("admin", "manager"),
-  getEmployees
-);
-router.post(
-  "/empolyee",
-  verifyToken,
-  authorizeRoles("admin", "manager"),
-  addEmployee
-);
+const onlyAdmin = authorizeRoles("admin");
+const onlyAdminOrManager = authorizeRoles("admin", "manager");
+const allAreAuthorized = authorizeRoles("admin", "manager", "employee ");
+
+// Manager Routes
+router.get("/managers", verifyToken, onlyAdmin, getManagers);
+router.post("/manager", verifyToken, onlyAdmin, addManager);
+router.delete("/manager", verifyToken, onlyAdmin, deleteManager);
+
+//Employee Routes
+router.get("/empolyees", verifyToken, onlyAdminOrManager, getEmployees);
+router.post("/empolyee", verifyToken, onlyAdminOrManager, addEmployee);
+router.delete("/empolyee", verifyToken, onlyAdminOrManager, deleteEmployee);
 
 module.exports = router;

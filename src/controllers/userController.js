@@ -9,7 +9,7 @@ const addEmployee = async (req, res) => {
     }
     const existsUser = await User.findOne({ email });
     if (existsUser) {
-      return res.status(400).json({ message: "User Already Taken" });
+      return res.status(400).json({ message: "Employee Already Taken" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -29,6 +29,27 @@ const addEmployee = async (req, res) => {
   }
 };
 
+const deleteEmployee = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const existsUser = await User.findOne({ email });
+
+    if (!existsUser) {
+      return res.status(400).json({ message: "Employee does not exist" });
+    }
+
+    existsUser.deleteStatus = true;
+    await existsUser.save();
+
+    return res.status(200).json({ message: "Employee deleted successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message ?? "Internal Server Error" });
+  }
+};
+
 const addManager = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
@@ -37,7 +58,7 @@ const addManager = async (req, res) => {
     }
     const existsUser = await User.findOne({ email });
     if (existsUser) {
-      return res.status(400).json({ message: "User Already Taken" });
+      return res.status(400).json({ message: "Manager Already Taken" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -54,6 +75,27 @@ const addManager = async (req, res) => {
     res
       .status(500)
       .json({ message: "Internal Server error", error: err.message });
+  }
+};
+
+const deleteManager = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const existsUser = await User.findOne({ email });
+
+    if (!existsUser) {
+      return res.status(400).json({ message: "Manager does not exist" });
+    }
+
+    existsUser.deleteStatus = true;
+    await existsUser.save();
+
+    return res.status(200).json({ message: "Manager deleted successfully" });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: error.message ?? "Internal Server Error" });
   }
 };
 
@@ -86,4 +128,6 @@ module.exports = {
   addManager,
   getManagers,
   getEmployees,
+  deleteEmployee,
+  deleteManager,
 };
