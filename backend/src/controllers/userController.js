@@ -1,15 +1,35 @@
 const User = require("../models/User");
 const bcrypt = require("bcryptjs");
+const { errorResponse } = require("../utils/reponse");
 
+// Get all employees
+const getEmployees = async (req, res) => {
+  try {
+    const employees = await User.find({
+      role: "employee",
+      deleteStatus: false,
+    }).select("-password -deleteStatus");
+    return successResponse(res, "Employees fetched successfully", employees);
+  } catch (err) {
+    return errorResponse(res, err.message ?? "Internal Server error", {});
+  }
+};
+
+// Add employee
 const addEmployee = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "Bad Request" });
+      return errorResponse(
+        res,
+        "All required fields must be filled out",
+        {},
+        400
+      );
     }
     const existsUser = await User.findOne({ email });
     if (existsUser) {
-      return res.status(400).json({ message: "Employee Already Taken" });
+      return errorResponse(res, "Employee Already Taken", {}, 400);
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -20,15 +40,13 @@ const addEmployee = async (req, res) => {
       role,
     });
     await newUser.save();
-
-    res.status(201).json({ message: "Empolyee created successfully" });
+    return successResponse(res, `Empolyee created successfully`, {}, 201);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Internal Server error", error: err.message });
+    return errorResponse(res, err.message ?? "Internal Server error", {});
   }
 };
 
+// Delete employee
 const deleteEmployee = async (req, res) => {
   try {
     const { email } = req.body;
@@ -36,29 +54,44 @@ const deleteEmployee = async (req, res) => {
     const existsUser = await User.findOne({ email });
 
     if (!existsUser) {
-      return res.status(400).json({ message: "Employee does not exist" });
+      return errorResponse(res, "Employee does not exist", {}, 400);
     }
-
     existsUser.deleteStatus = true;
     await existsUser.save();
-
-    return res.status(200).json({ message: "Employee deleted successfully" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: error.message ?? "Internal Server Error" });
+    return successResponse(res, `Employee deleted successfully`);
+  } catch (err) {
+    return errorResponse(res, err.message ?? "Internal Server error", {});
   }
 };
 
+// Get all managers
+const getManagers = async (req, res) => {
+  try {
+    const managers = await User.find({
+      role: "manager",
+      deleteStatus: false,
+    }).select("-password -deleteStatus");
+    return successResponse(res, "Managers fetched successfully", managers);
+  } catch (err) {
+    return errorResponse(res, err.message ?? "Internal Server error", {});
+  }
+};
+
+// Add manager
 const addManager = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     if (!name || !email || !password || !role) {
-      return res.status(400).json({ message: "Bad Request" });
+      return errorResponse(
+        res,
+        "All required fields must be filled out",
+        {},
+        400
+      );
     }
     const existsUser = await User.findOne({ email });
     if (existsUser) {
-      return res.status(400).json({ message: "Manager Already Taken" });
+      return errorResponse(res, "Manager Already Taken", {}, 400);
     }
     const hashedPassword = await bcrypt.hash(password, 10);
 
@@ -69,15 +102,13 @@ const addManager = async (req, res) => {
       role,
     });
     await newUser.save();
-
-    res.status(201).json({ message: "Manager created successfully" });
+    return successResponse(res, `Manager created successfully`, {}, 201);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Internal Server error", error: err.message });
+    return errorResponse(res, err.message ?? "Internal Server error", {});
   }
 };
 
+// Delete manager
 const deleteManager = async (req, res) => {
   try {
     const { email } = req.body;
@@ -85,41 +116,14 @@ const deleteManager = async (req, res) => {
     const existsUser = await User.findOne({ email });
 
     if (!existsUser) {
-      return res.status(400).json({ message: "Manager does not exist" });
+      return errorResponse(res, "Manager does not exist", {}, 400);
     }
 
     existsUser.deleteStatus = true;
     await existsUser.save();
-
-    return res.status(200).json({ message: "Manager deleted successfully" });
-  } catch (error) {
-    return res
-      .status(500)
-      .json({ message: error.message ?? "Internal Server Error" });
-  }
-};
-
-// Get all managers
-const getManagers = async (req, res) => {
-  try {
-    const managers = await User.find({ role: "manager" }).select("-password");
-    res.status(200).json(managers);
+    return successResponse(res, `Manager deleted successfully`);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Internal Server error", error: err.message });
-  }
-};
-
-// Get all employees
-const getEmployees = async (req, res) => {
-  try {
-    const employees = await User.find({ role: "employee" }).select("-password");
-    res.status(200).json(employees);
-  } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Internal Server error", error: err.message });
+    return errorResponse(res, err.message ?? "Internal Server error", {});
   }
 };
 

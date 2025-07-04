@@ -13,7 +13,6 @@ const {
 
 const onlyAdmin = authorizeRoles("admin");
 const onlyAdminOrManager = authorizeRoles("admin", "manager");
-const allAreAuthorized = authorizeRoles("admin", "manager", "employee ");
 
 // Manager Routes
 router.get("/managers", verifyToken, onlyAdmin, getManagers);

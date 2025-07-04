@@ -1,24 +1,34 @@
 const User = require("../models/User");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const { errorResponse, successResponse } = require("../utils/reponse");
 
 exports.Register = async (req, res) => {
   const { name, email, password, role } = req.body;
   try {
     const userExists = await User.findOne({ email });
-    if (userExists) return res.status(400).json({ mgs: "User already exists" });
+    if (userExists) return errorResponse(res, "User already exists", {}, 400);
+
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = new User({
+    const newUser = new User({
       name,
       email,
       password: hashedPassword,
       role,
     });
-    await user.save();
-    res.status(201).json({ mgs: `User Registered with username ${name}` });
+    const savedUser = await newUser.save();
+    const capitalizedRole = role.charAt(0).toUpperCase() + role.slice(1);
+    const userData = savedUser.toObject();
+    delete userData.password;
+    return successResponse(
+      res,
+      `${capitalizedRole} registered successfully`,
+      userData,
+      201
+    );
   } catch (err) {
-    res.status(500).json({ mgs: err.mgs ?? "Something went worng" });
+    return errorResponse(res, err.mgs ?? "Something went worng", {});
   }
 };
 
@@ -26,21 +36,17 @@ exports.Login = async (req, res) => {
   const { email, password } = req.body;
   try {
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ mgs: "User not found..!" });
+    if (!user) return errorResponse(res, "User not found..!", {}, 404);
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ mgs: "Invaild credentials" });
+    if (!isMatch) return errorResponse(res, "Invaild credentials", {}, 401);
 
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-    res.status(200).json({
-      token,
-      user: { name: user.name, email: user.email, role: user.role },
-    });
+    return successResponse(res, `Login successfully`, { token });
   } catch (err) {
-    res.status(500).json({ mgs: err.message });
+    return errorResponse(res, err.message, {});
   }
 };
-
